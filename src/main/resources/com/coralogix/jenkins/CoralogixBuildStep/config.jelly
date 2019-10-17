@@ -6,6 +6,9 @@
     <f:entry title="Application name" field="application">
         <f:textbox />
     </f:entry>
+    <f:entry>
+        <f:repeatableProperty field="subsystems" minimum="1" header="Subsystem" add="Add subsystem" />
+    </f:entry>
     <f:advanced>
         <f:entry title="Icon URL" field="icon">
             <f:textbox />
