@@ -1,13 +1,18 @@
 package com.coralogix.jenkins;
 
+import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import hudson.Extension;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
+import hudson.model.*;
+import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
+import hudson.util.ListBoxModel;
+import org.apache.commons.lang.StringUtils;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -18,7 +23,7 @@ import javax.servlet.ServletException;
 
 import com.coralogix.jenkins.utils.CoralogixAPI;
 import com.coralogix.jenkins.model.Log;
-
+import com.coralogix.jenkins.credentials.CoralogixCredential;
 
 /**
  * Jenkins build wrapper definition
@@ -31,6 +36,11 @@ import com.coralogix.jenkins.model.Log;
 public class CoralogixBuildWrapper extends BuildWrapper {
 
     /**
+     * Coralogix Private Key
+     */
+    private final String privateKeyCredentialId;
+
+    /**
      * Application name
      */
     private final String application;
@@ -41,8 +51,18 @@ public class CoralogixBuildWrapper extends BuildWrapper {
      * @param application application name
      */
     @DataBoundConstructor
-    public CoralogixBuildWrapper(String application) {
+    public CoralogixBuildWrapper(String privateKeyCredentialId, String application) {
+        this.privateKeyCredentialId = privateKeyCredentialId;
         this.application = application;
+    }
+
+    /**
+     * Coralogix Private Key getter
+     *
+     * @return the currently configured private key
+     */
+    public String getPrivateKeyCredentialId() {
+        return this.privateKeyCredentialId;
     }
 
     /**
@@ -87,7 +107,12 @@ public class CoralogixBuildWrapper extends BuildWrapper {
                             "",
                             build.getDisplayName()
                     ));
-                    CoralogixAPI.sendLogs(application, build.getParent().getFullName(), logEntries);
+                    CoralogixAPI.sendLogs(
+                            CoralogixAPI.retrieveCoralogixCredential(build, privateKeyCredentialId),
+                            application,
+                            build.getParent().getFullName(),
+                            logEntries
+                    );
                 } catch (Exception e) {
                     listener.getLogger().println("Cannot send build logs to Coralogix!");
                 }
@@ -103,6 +128,19 @@ public class CoralogixBuildWrapper extends BuildWrapper {
     public static final class DescriptorImpl extends BuildWrapperDescriptor {
 
         /**
+         * Coralogix Private Key validator
+         *
+         * @param privateKeyCredentialId Coralogix Private Key
+         * @return Private Key validation status
+         */
+        public FormValidation doCheckPrivateKeyCredentialId(@QueryParameter String privateKeyCredentialId) {
+            if (StringUtils.isEmpty(privateKeyCredentialId)) {
+                return FormValidation.error("You must provide the private key");
+            }
+            return FormValidation.ok();
+        }
+
+        /**
          * Application name validator
          *
          * @param application application name
@@ -115,6 +153,20 @@ public class CoralogixBuildWrapper extends BuildWrapper {
                 return FormValidation.error("Application name is missed!");
             }
             return FormValidation.ok();
+        }
+
+        /**
+         * Coralogix Private Keys list builder
+         *
+         * @param owner Credentials owner
+         * @param uri   Current URL
+         * @return allowed credentials list
+         */
+        @SuppressWarnings("unused")
+        public ListBoxModel doFillPrivateKeyCredentialIdItems(@AncestorInPath Item owner,
+                                                              @QueryParameter String uri) {
+            List<DomainRequirement> domainRequirements = URIRequirementBuilder.fromUri(uri).build();
+            return new StandardListBoxModel().includeAs(ACL.SYSTEM, owner, CoralogixCredential.class, domainRequirements);
         }
 
         /**

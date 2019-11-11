@@ -23,6 +23,26 @@ public class CoralogixConfiguration extends GlobalConfiguration {
     private String privateKey;
 
     /**
+     * Jenkins name
+     */
+    private String jenkinsName = "Jenkins";
+
+    /**
+     * System logs sending status
+     */
+    private Boolean systemLogsEnabled = false;
+
+    /**
+     * Audit logs sending status
+     */
+    private Boolean auditLogsEnabled = false;
+
+    /**
+     * Security logs sending status
+     */
+    private Boolean securityLogsEnabled = false;
+
+    /**
      * Global configuration getter
      *
      * @return global configuration values
@@ -48,6 +68,42 @@ public class CoralogixConfiguration extends GlobalConfiguration {
     }
 
     /**
+     * Jenkins name getter
+     *
+     * @return the currently configured Jenkins name
+     */
+    public String getJenkinsName() {
+        return this.jenkinsName;
+    }
+
+    /**
+     * Jenkins system logs status getter
+     *
+     * @return system logs sending status
+     */
+    public Boolean getSystemLogsEnabled() {
+        return this.systemLogsEnabled;
+    }
+
+    /**
+     * Jenkins audit logs status getter
+     *
+     * @return audit logs sending status
+     */
+    public Boolean getAuditLogsEnabled() {
+        return this.auditLogsEnabled;
+    }
+
+    /**
+     * Jenkins security logs status getter
+     *
+     * @return security logs sending status
+     */
+    public Boolean getSecurityLogsEnabled() {
+        return this.securityLogsEnabled;
+    }
+
+    /**
      * Coralogix Private Key setter
      *
      * @param privateKey the new value of the Private Key
@@ -55,6 +111,50 @@ public class CoralogixConfiguration extends GlobalConfiguration {
     @DataBoundSetter
     public void setPrivateKey(String privateKey) {
         this.privateKey = privateKey;
+        save();
+    }
+
+    /**
+     * Jenkins setter
+     *
+     * @param jenkinsName the new value of the Jenkins name
+     */
+    @DataBoundSetter
+    public void setJenkinsName(String jenkinsName) {
+        this.jenkinsName = jenkinsName;
+        save();
+    }
+
+    /**
+     * Jenkins system logs status setter
+     *
+     * @param systemLogsEnabled the new status for system logs sending
+     */
+    @DataBoundSetter
+    public void setSystemLogsEnabled(Boolean systemLogsEnabled) {
+        this.systemLogsEnabled = systemLogsEnabled;
+        save();
+    }
+
+    /**
+     * Jenkins audit logs status setter
+     *
+     * @param auditLogsEnabled the new status for audit logs sending
+     */
+    @DataBoundSetter
+    public void setAuditLogsEnabled(Boolean auditLogsEnabled) {
+        this.auditLogsEnabled = auditLogsEnabled;
+        save();
+    }
+
+    /**
+     * Jenkins security logs status setter
+     *
+     * @param securityLogsEnabled the new status for security logs sending
+     */
+    @DataBoundSetter
+    public void setSecurityLogsEnabled(Boolean securityLogsEnabled) {
+        this.securityLogsEnabled = securityLogsEnabled;
         save();
     }
 
@@ -67,6 +167,19 @@ public class CoralogixConfiguration extends GlobalConfiguration {
     public FormValidation doCheckPrivateKey(@QueryParameter String privateKey) {
         if (StringUtils.isEmpty(privateKey)) {
             return FormValidation.error("You must provide the private key");
+        }
+        return FormValidation.ok();
+    }
+
+    /**
+     * Jenkins name validator
+     *
+     * @param jenkinsName Jenkins name
+     * @return Jenkins name validation status
+     */
+    public FormValidation doCheckJenkinsName(@QueryParameter String jenkinsName) {
+        if (StringUtils.isEmpty(jenkinsName)) {
+            return FormValidation.error("You must provide the Jenkins name");
         }
         return FormValidation.ok();
     }

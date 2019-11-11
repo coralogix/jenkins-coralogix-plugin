@@ -14,19 +14,19 @@ import com.coralogix.jenkins.model.Log;
 import com.coralogix.jenkins.utils.CoralogixAPI;
 
 /**
- * Jenkins events listener definition
+ * Jenkins security events listener definition
  *
  * @author Eldar Aliiev
  * @version 1.0.0
  * @since 2019-10-21
  */
 @Extension
-public class CoralogixListener extends SecurityListener {
+public class CoralogixSecurityListener extends SecurityListener {
 
     /**
      * Events listener logger
      */
-    private static final Logger logger = Logger.getLogger(CoralogixListener.class.getName());
+    private static final Logger logger = Logger.getLogger(CoralogixSecurityListener.class.getName());
 
     /**
      * Login event
@@ -35,7 +35,7 @@ public class CoralogixListener extends SecurityListener {
      */
     @Override
     protected void authenticated(@Nonnull UserDetails details) {
-        this.sendAuditLog(details.getUsername() + " logged in");
+        this.sendSecurityLog(details.getUsername() + " logged in");
     }
 
     /**
@@ -45,7 +45,7 @@ public class CoralogixListener extends SecurityListener {
      */
     @Override
     protected void failedToAuthenticate(@Nonnull String username) {
-        this.sendAuditLog(username + " failed to login");
+        this.sendSecurityLog(username + " failed to login");
     }
 
     /**
@@ -73,28 +73,35 @@ public class CoralogixListener extends SecurityListener {
      */
     @Override
     protected void loggedOut(@Nonnull String username) {
-        this.sendAuditLog(username + " logged out");
+        this.sendSecurityLog(username + " logged out");
     }
 
     /**
-     * Audit logs sender
+     * Security logs sender
      *
-     * @param message audit message
+     * @param message security message
      */
-    static void sendAuditLog(String message) {
-        try {
-            List<Log> logEntries = new ArrayList<>();
-            logEntries.add(new Log(
-                    3,
-                    message,
-                    "audit",
-                    "",
-                    "",
-                    ""
-            ));
-            CoralogixAPI.sendLogs("jenkins", "security", logEntries);
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Cannot send build logs to Coralogix!");
+    static void sendSecurityLog(String message) {
+        if (CoralogixConfiguration.get().getSecurityLogsEnabled()) {
+            try {
+                List<Log> logEntries = new ArrayList<>();
+                logEntries.add(new Log(
+                        3,
+                        message,
+                        "security",
+                        "",
+                        "",
+                        ""
+                ));
+                CoralogixAPI.sendLogs(
+                        CoralogixConfiguration.get().getPrivateKey(),
+                        CoralogixConfiguration.get().getJenkinsName(),
+                        "security",
+                        logEntries
+                );
+            } catch (Exception e) {
+                logger.log(Level.WARNING, "Cannot send build logs to Coralogix!");
+            }
         }
     }
 }

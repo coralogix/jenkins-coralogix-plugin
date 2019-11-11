@@ -1,14 +1,22 @@
 package com.coralogix.jenkins.pipeline;
 
+import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import hudson.Extension;
+import hudson.model.Item;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.security.ACL;
+import hudson.util.ListBoxModel;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.util.HashSet;
@@ -16,9 +24,9 @@ import java.util.Set;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.coralogix.jenkins.CoralogixConfiguration;
 import com.coralogix.jenkins.model.Subsystem;
 import com.coralogix.jenkins.utils.CoralogixAPI;
+import com.coralogix.jenkins.credentials.CoralogixCredential;
 
 /**
  * Pipeline counterpart of the CoralogixBuildWrapper.
@@ -29,6 +37,11 @@ import com.coralogix.jenkins.utils.CoralogixAPI;
  * @since 2019-10-21
  */
 public class CoralogixTag extends Step {
+
+    /**
+     * Coralogix Private Key
+     */
+    private final String privateKeyCredentialId;
 
     /**
      * Tag name
@@ -59,11 +72,21 @@ public class CoralogixTag extends Step {
      * @param icon        tag icon
      */
     @DataBoundConstructor
-    public CoralogixTag(String tag, String application, List<Subsystem> subsystems, String icon) {
+    public CoralogixTag(String privateKeyCredentialId, String tag, String application, List<Subsystem> subsystems, String icon) {
+        this.privateKeyCredentialId = privateKeyCredentialId;
         this.tag = tag;
         this.application = application;
         this.subsystems = subsystems;
         this.icon = icon;
+    }
+
+    /**
+     * Coralogix Private Key getter
+     *
+     * @return the currently configured private key
+     */
+    public String getPrivateKeyCredentialId() {
+        return this.privateKeyCredentialId;
     }
 
     /**
@@ -111,7 +134,7 @@ public class CoralogixTag extends Step {
      */
     @Override
     public StepExecution start(StepContext context) throws Exception {
-        return new Execution(context, this.tag, this.application, this.subsystems, this.icon);
+        return new Execution(context, this.privateKeyCredentialId, this.tag, this.application, this.subsystems, this.icon);
     }
 
     /**
@@ -124,6 +147,11 @@ public class CoralogixTag extends Step {
          * Serial UID
          */
         private static final long serialVersionUID = 1L;
+
+        /**
+         * Coralogix Private Key
+         */
+        private transient final String privateKeyCredentialId;
 
         /**
          * Tag name
@@ -154,8 +182,9 @@ public class CoralogixTag extends Step {
          * @param subsystems  subsystems name
          * @param icon        tag icon
          */
-        Execution(StepContext context, String tag, String application, List<Subsystem> subsystems, String icon) {
+        Execution(StepContext context, String privateKeyCredentialId, String tag, String application, List<Subsystem> subsystems, String icon) {
             super(context);
+            this.privateKeyCredentialId = privateKeyCredentialId;
             this.tag = tag;
             this.application = application;
             this.subsystems = subsystems;
@@ -170,11 +199,11 @@ public class CoralogixTag extends Step {
          */
         @Override
         protected Void run() throws Exception {
+            Run<?, ?> build = getContext().get(Run.class);
             TaskListener listener = getContext().get(TaskListener.class);
-
             try {
                 CoralogixAPI.pushTag(
-                        CoralogixConfiguration.get().getPrivateKey(),
+                        CoralogixAPI.retrieveCoralogixCredential(build, privateKeyCredentialId),
                         application,
                         subsystems.stream().map(Subsystem::getName).collect(Collectors.joining(",")),
                         tag,
@@ -225,6 +254,20 @@ public class CoralogixTag extends Step {
             contexts.add(TaskListener.class);
             contexts.add(Run.class);
             return contexts;
+        }
+
+        /**
+         * Coralogix Private Keys list builder
+         *
+         * @param owner Credentials owner
+         * @param uri   Current URL
+         * @return allowed credentials list
+         */
+        @SuppressWarnings("unused")
+        public ListBoxModel doFillPrivateKeyCredentialIdItems(@AncestorInPath Item owner,
+                                                              @QueryParameter String uri) {
+            List<DomainRequirement> domainRequirements = URIRequirementBuilder.fromUri(uri).build();
+            return new StandardListBoxModel().includeAs(ACL.SYSTEM, owner, CoralogixCredential.class, domainRequirements);
         }
     }
 }
