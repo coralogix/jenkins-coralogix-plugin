@@ -1,14 +1,22 @@
 package com.coralogix.jenkins.pipeline;
 
+import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import hudson.Extension;
+import hudson.model.Item;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.security.ACL;
+import hudson.util.ListBoxModel;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.util.HashSet;
@@ -18,6 +26,7 @@ import java.util.ArrayList;
 
 import com.coralogix.jenkins.model.Log;
 import com.coralogix.jenkins.utils.CoralogixAPI;
+import com.coralogix.jenkins.credentials.CoralogixCredential;
 
 /**
  * Pipeline counterpart of the CoralogixBuildWrapper.
@@ -30,6 +39,11 @@ import com.coralogix.jenkins.utils.CoralogixAPI;
 public class CoralogixSend extends Step {
 
     /**
+     * Coralogix Private Key
+     */
+    private final String privateKeyCredentialId;
+
+    /**
      * Application name
      */
     private final String application;
@@ -40,8 +54,18 @@ public class CoralogixSend extends Step {
      * @param application application name
      */
     @DataBoundConstructor
-    public CoralogixSend(String application) {
+    public CoralogixSend(String privateKeyCredentialId, String application) {
+        this.privateKeyCredentialId = privateKeyCredentialId;
         this.application = application;
+    }
+
+    /**
+     * Coralogix Private Key getter
+     *
+     * @return the currently configured private key
+     */
+    public String getPrivateKeyCredentialId() {
+        return this.privateKeyCredentialId;
     }
 
     /**
@@ -62,7 +86,7 @@ public class CoralogixSend extends Step {
      */
     @Override
     public StepExecution start(StepContext context) throws Exception {
-        return new Execution(context, this.application);
+        return new Execution(context, this.privateKeyCredentialId, this.application);
     }
 
     /**
@@ -77,6 +101,11 @@ public class CoralogixSend extends Step {
         private static final long serialVersionUID = 1L;
 
         /**
+         * Coralogix Private Key
+         */
+        private transient final String privateKeyCredentialId;
+
+        /**
          * Application name
          */
         private transient final String application;
@@ -84,11 +113,12 @@ public class CoralogixSend extends Step {
         /**
          * Pipeline step executor initialization
          *
-         * @param context execution context
+         * @param context     execution context
          * @param application application name
          */
-        Execution(StepContext context, String application) {
+        Execution(StepContext context, String privateKeyCredentialId, String application) {
             super(context);
+            this.privateKeyCredentialId = privateKeyCredentialId;
             this.application = application;
         }
 
@@ -102,7 +132,6 @@ public class CoralogixSend extends Step {
         protected Void run() throws Exception {
             Run<?, ?> build = getContext().get(Run.class);
             TaskListener listener = getContext().get(TaskListener.class);
-
             try {
                 List<Log> logEntries = new ArrayList<>();
                 List<String> logLines = build.getLog(Integer.MAX_VALUE);
@@ -114,11 +143,15 @@ public class CoralogixSend extends Step {
                         "",
                         build.getDisplayName()
                 ));
-                CoralogixAPI.sendLogs(application, build.getParent().getFullName(), logEntries);
+                CoralogixAPI.sendLogs(
+                        CoralogixAPI.retrieveCoralogixCredential(build, privateKeyCredentialId),
+                        application,
+                        build.getParent().getFullName(),
+                        logEntries
+                );
             } catch (Exception e) {
                 listener.getLogger().println("Cannot send build logs to Coralogix!");
             }
-
             return null;
         }
     }
@@ -160,6 +193,20 @@ public class CoralogixSend extends Step {
             contexts.add(TaskListener.class);
             contexts.add(Run.class);
             return contexts;
+        }
+
+        /**
+         * Coralogix Private Keys list builder
+         *
+         * @param owner Credentials owner
+         * @param uri   Current URL
+         * @return allowed credentials list
+         */
+        @SuppressWarnings("unused")
+        public ListBoxModel doFillPrivateKeyCredentialIdItems(@AncestorInPath Item owner,
+                                                              @QueryParameter String uri) {
+            List<DomainRequirement> domainRequirements = URIRequirementBuilder.fromUri(uri).build();
+            return new StandardListBoxModel().includeEmptyValue().includeAs(ACL.SYSTEM, owner, CoralogixCredential.class, domainRequirements);
         }
     }
 }

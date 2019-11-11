@@ -1,14 +1,22 @@
 package com.coralogix.jenkins;
 
+import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import hudson.Launcher;
 import hudson.Extension;
 import hudson.FilePath;
+import hudson.model.Item;
+import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.model.AbstractProject;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
+import hudson.util.ListBoxModel;
+import org.apache.commons.lang.StringUtils;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import jenkins.tasks.SimpleBuildStep;
@@ -21,6 +29,7 @@ import java.util.stream.Collectors;
 
 import com.coralogix.jenkins.model.Subsystem;
 import com.coralogix.jenkins.utils.CoralogixAPI;
+import com.coralogix.jenkins.credentials.CoralogixCredential;
 
 /**
  * Jenkins build step definition
@@ -31,6 +40,11 @@ import com.coralogix.jenkins.utils.CoralogixAPI;
  * @since 2019-10-21
  */
 public class CoralogixBuildStep extends Builder implements SimpleBuildStep {
+
+    /**
+     * Coralogix Private Key
+     */
+    private final String privateKeyCredentialId;
 
     /**
      * Tag name
@@ -61,11 +75,21 @@ public class CoralogixBuildStep extends Builder implements SimpleBuildStep {
      * @param icon        tag icon
      */
     @DataBoundConstructor
-    public CoralogixBuildStep(String tag, String application, List<Subsystem> subsystems, String icon) {
+    public CoralogixBuildStep(String privateKeyCredentialId, String tag, String application, List<Subsystem> subsystems, String icon) {
+        this.privateKeyCredentialId = privateKeyCredentialId;
         this.tag = tag;
         this.application = application;
         this.subsystems = subsystems;
         this.icon = icon;
+    }
+
+    /**
+     * Coralogix Private Key getter
+     *
+     * @return the currently configured private key
+     */
+    public String getPrivateKeyCredentialId() {
+        return this.privateKeyCredentialId;
     }
 
     /**
@@ -118,7 +142,7 @@ public class CoralogixBuildStep extends Builder implements SimpleBuildStep {
     public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
         try {
             CoralogixAPI.pushTag(
-                    CoralogixConfiguration.get().getPrivateKey(),
+                    CoralogixAPI.retrieveCoralogixCredential(run, privateKeyCredentialId),
                     application,
                     subsystems.stream().map(Subsystem::getName).collect(Collectors.joining(",")),
                     tag,
@@ -135,6 +159,19 @@ public class CoralogixBuildStep extends Builder implements SimpleBuildStep {
     @Symbol("greet")
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
+
+        /**
+         * Coralogix Private Key validator
+         *
+         * @param privateKeyCredentialId Coralogix Private Key
+         * @return Private Key validation status
+         */
+        public FormValidation doCheckPrivateKeyCredentialId(@QueryParameter String privateKeyCredentialId) {
+            if (StringUtils.isEmpty(privateKeyCredentialId)) {
+                return FormValidation.error("You must provide the private key");
+            }
+            return FormValidation.ok();
+        }
 
         /**
          * Tag name validator
@@ -164,6 +201,20 @@ public class CoralogixBuildStep extends Builder implements SimpleBuildStep {
                 return FormValidation.error("Application name is missed!");
             }
             return FormValidation.ok();
+        }
+
+        /**
+         * Coralogix Private Keys list builder
+         *
+         * @param owner Credentials owner
+         * @param uri   Current URL
+         * @return allowed credentials list
+         */
+        @SuppressWarnings("unused")
+        public ListBoxModel doFillPrivateKeyCredentialIdItems(@AncestorInPath Item owner,
+                                                              @QueryParameter String uri) {
+            List<DomainRequirement> domainRequirements = URIRequirementBuilder.fromUri(uri).build();
+            return new StandardListBoxModel().includeEmptyValue().includeAs(ACL.SYSTEM, owner, CoralogixCredential.class, domainRequirements);
         }
 
         /**
