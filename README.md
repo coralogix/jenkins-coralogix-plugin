@@ -16,9 +16,17 @@ push tags to [Coralogix](https://coralogix.com/).
 ## Configuration
 
 Go to ``Manage Jenkins``, open ``Configure system``,
-find ``Coralogix`` section and configure your account private key:
+find ``Coralogix`` section and configure your account private key
+for sending system/audit/security logs:
 
 ![Coralogix Configuration](docs/images/coralogix_global_configuration.png)
+
+## Credentials
+
+Before usage you need to create ``Jenkins`` credentials with
+``Coralogix`` private key for your team:
+
+![Coralogix Configuration](docs/images/coralogix_credentials.png)
 
 ## Usage
 
@@ -31,8 +39,8 @@ Send your build logs to Coralogix.
 
 #### Freestyle project
 
-Just check the ``Send build logs to Coralogix`` 
-and provide ``Application name``:
+Just check the ``Send build logs to Coralogix``,
+select ``Private Key`` and provide ``Application name``:
 
 ![Coralogix Logs](docs/images/coralogix_send_logs.png)
 
@@ -52,7 +60,8 @@ pipeline {
     }
     post {
         always {
-            coralogixSend 'MyApp'
+            coralogixSend privateKeyCredentialId: 'coralogix-production',
+                          application: 'MyApp'
         }
     }
 }
@@ -66,6 +75,7 @@ Push version tag to Coralogix.
 
 Add build step ``Push Coralogix tag`` and configure:
 
+* **Private Key** - your Coralogix account private key
 * **Tag name** - version tag name
 * **Application name** - your application name
 * **Subsystem names** - your subsystem names
@@ -89,7 +99,14 @@ pipeline {
     }
     post {
         success {
-            coralogixTag tag: '1.0.0', application: 'MyApp', subsystems: [[name: 'staging'], [name: 'production']], icon: ''
+            coralogixTag privateKeyCredentialId: 'coralogix-production',
+                         tag: '1.0.0',
+                         application: 'MyApp',
+                         subsystems: [
+                            [name: 'staging'],
+                            [name: 'production']
+                         ],
+                         icon: ''
         }
     }
 }

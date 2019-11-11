@@ -1,8 +1,20 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
     <f:section title="Coralogix">
-        <f:entry title="Private Key" field="privateKey">
-            <f:password/>
+        <f:entry title="Coralogix Private Key" field="privateKey">
+            <f:password />
+        </f:entry>
+        <f:entry title="Jenkins Name" field="jenkinsName">
+            <f:textbox />
+        </f:entry>
+        <f:entry title="Send system logs" field="systemLogsEnabled" description="Check to enable the sending of Jenkins system logs to Coralogix">
+            <f:checkbox readonly="true" />
+        </f:entry>
+        <f:entry title="Send audit logs" field="auditLogsEnabled" description="Check to enable the sending of Jenkins audit logs to Coralogix">
+            <f:checkbox />
+        </f:entry>
+        <f:entry title="Send security logs" field="securityLogsEnabled" description="Check to enable the sending of Jenkins security logs to Coralogix">
+            <f:checkbox />
         </f:entry>
     </f:section>
 </j:jelly>
