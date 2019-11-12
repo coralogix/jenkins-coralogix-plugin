@@ -206,7 +206,7 @@ public class CoralogixSend extends Step {
         public ListBoxModel doFillPrivateKeyCredentialIdItems(@AncestorInPath Item owner,
                                                               @QueryParameter String uri) {
             List<DomainRequirement> domainRequirements = URIRequirementBuilder.fromUri(uri).build();
-            return new StandardListBoxModel().includeAs(ACL.SYSTEM, owner, CoralogixCredential.class, domainRequirements);
+            return new StandardListBoxModel().includeEmptyValue().includeAs(ACL.SYSTEM, owner, CoralogixCredential.class, domainRequirements);
         }
     }
 }
