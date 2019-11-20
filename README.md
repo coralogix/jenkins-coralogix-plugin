@@ -61,7 +61,8 @@ pipeline {
     post {
         always {
             coralogixSend privateKeyCredentialId: 'coralogix-production',
-                          application: 'MyApp'
+                          application: 'MyApp',
+                          splitLogs: true
         }
     }
 }
