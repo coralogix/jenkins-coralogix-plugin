@@ -14,6 +14,7 @@ import hudson.util.ListBoxModel;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
 import java.io.*;
@@ -46,6 +47,11 @@ public class CoralogixBuildWrapper extends BuildWrapper {
     private final String application;
 
     /**
+     * Logs splitting
+     */
+    private Boolean splitLogs = false;
+
+    /**
      * Initialize build wrapper
      *
      * @param application application name
@@ -75,6 +81,23 @@ public class CoralogixBuildWrapper extends BuildWrapper {
     }
 
     /**
+     * Logs splitting status getter
+     *
+     * @return logs splitting status
+     */
+    public Boolean getSplitLogs() {
+        return this.splitLogs;
+    }
+
+    /**
+     * Logs splitting status setter
+     */
+    @DataBoundSetter
+    public void setSplitLogs(Boolean splitLogs) {
+        this.splitLogs = splitLogs;
+    }
+
+    /**
      * Initialize build wrapper environment
      *
      * @param build    build context
@@ -99,14 +122,27 @@ public class CoralogixBuildWrapper extends BuildWrapper {
                 try {
                     List<Log> logEntries = new ArrayList<>();
                     List<String> logLines = build.getLog(Integer.MAX_VALUE);
-                    logEntries.add(new Log(
-                            1,
-                            String.join("\n", logLines),
-                            "job",
-                            "",
-                            "",
-                            build.getDisplayName()
-                    ));
+                    if(splitLogs) {
+                        for(String logRecordText : logLines) {
+                            logEntries.add(new Log(
+                                    1,
+                                    logRecordText,
+                                    "job",
+                                    "",
+                                    "",
+                                    build.getDisplayName()
+                            ));
+                        }
+                    } else {
+                        logEntries.add(new Log(
+                                1,
+                                String.join("\n", logLines),
+                                "job",
+                                "",
+                                "",
+                                build.getDisplayName()
+                        ));
+                    }
                     CoralogixAPI.sendLogs(
                             CoralogixAPI.retrieveCoralogixCredential(build, privateKeyCredentialId),
                             application,
