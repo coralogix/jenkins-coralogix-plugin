@@ -50,6 +50,11 @@ public class CoralogixSend extends Step {
     private final String application;
 
     /**
+     * Subsystem name
+     */
+    private final String subsystem;
+
+    /**
      * Logs splitting
      */
     private final Boolean splitLogs;
@@ -60,9 +65,10 @@ public class CoralogixSend extends Step {
      * @param application application name
      */
     @DataBoundConstructor
-    public CoralogixSend(String privateKeyCredentialId, String application, Boolean splitLogs) {
+    public CoralogixSend(String privateKeyCredentialId, String application, String subsystem, Boolean splitLogs) {
         this.privateKeyCredentialId = privateKeyCredentialId;
         this.application = application;
+        this.subsystem = subsystem;
         this.splitLogs = splitLogs;
     }
 
@@ -85,6 +91,15 @@ public class CoralogixSend extends Step {
     }
 
     /**
+     * Subsystem name getter
+     *
+     * @return subsystem name
+     */
+    public String getSubsystem() {
+        return this.subsystem;
+    }
+
+    /**
      * Logs splitting status getter
      *
      * @return logs splitting status
@@ -102,7 +117,7 @@ public class CoralogixSend extends Step {
      */
     @Override
     public StepExecution start(StepContext context) throws Exception {
-        return new Execution(context, this.privateKeyCredentialId, this.application, this.splitLogs);
+        return new Execution(context, this.privateKeyCredentialId, this.application, this.subsystem, this.splitLogs);
     }
 
     /**
@@ -127,6 +142,11 @@ public class CoralogixSend extends Step {
         private transient final String application;
 
         /**
+         * Subsystem name
+         */
+        private transient final String subsystem;
+
+        /**
          * Logs splitting
          */
         private transient final Boolean splitLogs;
@@ -137,10 +157,11 @@ public class CoralogixSend extends Step {
          * @param context     execution context
          * @param application application name
          */
-        Execution(StepContext context, String privateKeyCredentialId, String application, Boolean splitLogs) {
+        Execution(StepContext context, String privateKeyCredentialId, String application, String subsystem, Boolean splitLogs) {
             super(context);
             this.privateKeyCredentialId = privateKeyCredentialId;
             this.application = application;
+            this.subsystem = subsystem;
             this.splitLogs = splitLogs;
         }
 
@@ -181,7 +202,7 @@ public class CoralogixSend extends Step {
                 CoralogixAPI.sendLogs(
                         CoralogixAPI.retrieveCoralogixCredential(build, privateKeyCredentialId),
                         application,
-                        build.getParent().getFullName(),
+                        subsystem,
                         logEntries
                 );
             } catch (Exception e) {

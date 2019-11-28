@@ -47,9 +47,14 @@ public class CoralogixBuildWrapper extends BuildWrapper {
     private final String application;
 
     /**
+     * Subsystem name
+     */
+    private final String subsystem;
+
+    /**
      * Logs splitting
      */
-    private Boolean splitLogs = false;
+    private final Boolean splitLogs;
 
     /**
      * Initialize build wrapper
@@ -57,9 +62,11 @@ public class CoralogixBuildWrapper extends BuildWrapper {
      * @param application application name
      */
     @DataBoundConstructor
-    public CoralogixBuildWrapper(String privateKeyCredentialId, String application) {
+    public CoralogixBuildWrapper(String privateKeyCredentialId, String application, String subsystem, Boolean splitLogs) {
         this.privateKeyCredentialId = privateKeyCredentialId;
         this.application = application;
+        this.subsystem = subsystem;
+        this.splitLogs = splitLogs;
     }
 
     /**
@@ -81,20 +88,21 @@ public class CoralogixBuildWrapper extends BuildWrapper {
     }
 
     /**
+     * Subsystem name getter
+     *
+     * @return subsystem name
+     */
+    public String getSubsystem() {
+        return this.subsystem;
+    }
+
+    /**
      * Logs splitting status getter
      *
      * @return logs splitting status
      */
     public Boolean getSplitLogs() {
         return this.splitLogs;
-    }
-
-    /**
-     * Logs splitting status setter
-     */
-    @DataBoundSetter
-    public void setSplitLogs(Boolean splitLogs) {
-        this.splitLogs = splitLogs;
     }
 
     /**
@@ -122,8 +130,8 @@ public class CoralogixBuildWrapper extends BuildWrapper {
                 try {
                     List<Log> logEntries = new ArrayList<>();
                     List<String> logLines = build.getLog(Integer.MAX_VALUE);
-                    if(splitLogs) {
-                        for(String logRecordText : logLines) {
+                    if (splitLogs) {
+                        for (String logRecordText : logLines) {
                             logEntries.add(new Log(
                                     1,
                                     logRecordText,
@@ -145,8 +153,8 @@ public class CoralogixBuildWrapper extends BuildWrapper {
                     }
                     CoralogixAPI.sendLogs(
                             CoralogixAPI.retrieveCoralogixCredential(build, privateKeyCredentialId),
-                            application,
-                            build.getParent().getFullName(),
+                            CoralogixAPI.replaceMacros(build, listener, application),
+                            CoralogixAPI.replaceMacros(build, listener, subsystem),
                             logEntries
                     );
                 } catch (Exception e) {
@@ -187,6 +195,21 @@ public class CoralogixBuildWrapper extends BuildWrapper {
         public FormValidation doCheckApplication(@QueryParameter String application) throws IOException, ServletException {
             if (application.length() == 0) {
                 return FormValidation.error("Application name is missed!");
+            }
+            return FormValidation.ok();
+        }
+
+        /**
+         * Subsystem name validator
+         *
+         * @param subsystem subsystem name
+         * @return subsystem name validation status
+         * @throws IOException
+         * @throws ServletException
+         */
+        public FormValidation doCheckSubsystem(@QueryParameter String subsystem) throws IOException, ServletException {
+            if (subsystem.length() == 0) {
+                return FormValidation.error("Subsystem name is missed!");
             }
             return FormValidation.ok();
         }

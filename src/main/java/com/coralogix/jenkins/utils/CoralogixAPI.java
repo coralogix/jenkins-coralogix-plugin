@@ -2,8 +2,6 @@ package com.coralogix.jenkins.utils;
 
 import java.util.Collections;
 import java.util.List;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -12,8 +10,12 @@ import com.cloudbees.plugins.credentials.matchers.IdMatcher;
 import com.coralogix.jenkins.credentials.CoralogixCredential;
 import com.coralogix.jenkins.exception.CoralogixPluginException;
 import com.google.gson.Gson;
+import hudson.Util;
 import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.security.ACL;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -93,23 +95,10 @@ public class CoralogixAPI {
                 privateKey,
                 application,
                 subsystem,
-                getHostName(),
+                Util.getHostName(),
                 logEntries
         );
         return gson.toJson(bulk);
-    }
-
-    /**
-     * Get current machine hostname
-     *
-     * @return hostname
-     */
-    private static String getHostName() {
-        try {
-            return InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException e) {
-            return "master";
-        }
     }
 
     /**
@@ -138,5 +127,47 @@ public class CoralogixAPI {
             throw new CredentialsUnavailableException(privateKeyCredentialId);
         }
         return credential.getPrivateKey();
+    }
+
+    /**
+     * Substitute parameters
+     *
+     * @param build build context
+     * @param listener build listener context
+     * @param inputString parameter name
+     * @return parameter final value
+     */
+    public static String replaceMacros(Run<?, ?> build, TaskListener listener, String inputString) {
+        String returnString = inputString;
+        if (build != null && inputString != null) {
+            try {
+                Map<String, String> messageEnvVars = getEnvVars(build, listener);
+                returnString = Util.replaceMacro(inputString, messageEnvVars);
+
+            } catch (Exception e) {
+                listener.getLogger().printf("Couldn't replace macros in message: %s%n", e.getMessage());
+            }
+        }
+        return returnString;
+    }
+
+    /**
+     * Build environment variables list
+     *
+     * @param build build context
+     * @param listener build listener context
+     * @return environment variable list
+     */
+    private static Map<String, String> getEnvVars(Run<?, ?> build, TaskListener listener) {
+        Map<String, String> messageEnvVars = new HashMap<>();
+        if (build != null) {
+            messageEnvVars.putAll(build.getCharacteristicEnvVars());
+            try {
+                messageEnvVars.putAll(build.getEnvironment(listener));
+            } catch (Exception e) {
+                listener.getLogger().printf("Couldn't get Env Variables: %s%n", e.getMessage());
+            }
+        }
+        return messageEnvVars;
     }
 }

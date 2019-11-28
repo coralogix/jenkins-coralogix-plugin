@@ -54,7 +54,7 @@ pipeline {
     stages {
         stage('Test') {
             steps {
-                sh "Hello world!"
+                echo "Hello world!"
             }
         }
     }
@@ -62,6 +62,7 @@ pipeline {
         always {
             coralogixSend privateKeyCredentialId: 'coralogix-production',
                           application: 'MyApp',
+                          subsystem: "${env.JOB_NAME}",
                           splitLogs: true
         }
     }
@@ -94,7 +95,7 @@ pipeline {
     stages {
         stage('Test') {
             steps {
-                sh "Hello world!"
+                echo "Hello world!"
             }
         }
     }

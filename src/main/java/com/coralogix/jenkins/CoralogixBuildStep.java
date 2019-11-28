@@ -143,9 +143,11 @@ public class CoralogixBuildStep extends Builder implements SimpleBuildStep {
         try {
             CoralogixAPI.pushTag(
                     CoralogixAPI.retrieveCoralogixCredential(run, privateKeyCredentialId),
-                    application,
-                    subsystems.stream().map(Subsystem::getName).collect(Collectors.joining(",")),
-                    tag,
+                    CoralogixAPI.replaceMacros(run, listener, application),
+                    CoralogixAPI.replaceMacros(run, listener,
+                            subsystems.stream().map(Subsystem::getName).collect(Collectors.joining(","))
+                    ),
+                    CoralogixAPI.replaceMacros(run, listener, tag),
                     icon
             );
         } catch (Exception e) {
