@@ -6,6 +6,9 @@
     <f:entry title="Application name" field="application">
         <f:textbox />
     </f:entry>
+    <f:entry title="Subsystem name" field="subsystem">
+        <f:textbox default="$${JOB_NAME}" />
+    </f:entry>
     <f:entry title="Split the logs" field="splitLogs">
         <f:checkbox />
     </f:entry>
