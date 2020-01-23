@@ -16,5 +16,10 @@
         <f:entry title="Send security logs" field="securityLogsEnabled" description="Check to enable the sending of Jenkins security logs to Coralogix">
             <f:checkbox />
         </f:entry>
+        <f:advanced>
+            <f:entry title="Coralogix API endpoint" field="apiEndpoint" description="Overwrite Coralogix API endpoint">
+                <f:textbox />
+            </f:entry>
+        </f:advanced>
     </f:section>
 </j:jelly>

@@ -22,6 +22,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.entity.StringEntity;
+import com.coralogix.jenkins.CoralogixConfiguration;
 import com.coralogix.jenkins.model.Log;
 import com.coralogix.jenkins.model.Bulk;
 
@@ -48,7 +49,7 @@ public class CoralogixAPI {
         CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
             HttpGet request = new HttpGet(String.format(
-                    "https://api.coralogix.com/api/v1/addTag?key=%s&application=%s&subsystem=%s&name=%s&iconUrl=%s",
+                    CoralogixConfiguration.get().getApiEndpoint() + "api/v1/addTag?key=%s&application=%s&subsystem=%s&name=%s&iconUrl=%s",
                     privateKey,
                     application,
                     subsystems,
@@ -72,7 +73,7 @@ public class CoralogixAPI {
     public static void sendLogs(String privateKey, String application, String subsystem, List<Log> logEntries) throws Exception {
         CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
-            HttpPost request = new HttpPost("https://api.coralogix.com/api/v1/logs");
+            HttpPost request = new HttpPost(CoralogixConfiguration.get().getApiEndpoint() + "api/v1/logs");
             request.addHeader("content-type", "application/json");
             request.setEntity(new StringEntity(buildData(privateKey, application, subsystem, logEntries)));
             httpclient.execute(request);
