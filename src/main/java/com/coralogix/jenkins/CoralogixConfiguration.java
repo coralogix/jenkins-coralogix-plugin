@@ -43,6 +43,11 @@ public class CoralogixConfiguration extends GlobalConfiguration {
     private Boolean securityLogsEnabled = false;
 
     /**
+     * Coralogix API endpoint
+     */
+    private String apiEndpoint = "https://api.coralogix.com/";
+
+    /**
      * Global configuration getter
      *
      * @return global configuration values
@@ -104,6 +109,15 @@ public class CoralogixConfiguration extends GlobalConfiguration {
     }
 
     /**
+     * Coralogix API endpoint getter
+     *
+     * @return the currently configured Coralogix API endpoint
+     */
+    public String getApiEndpoint() {
+        return this.apiEndpoint;
+    }
+
+    /**
      * Coralogix Private Key setter
      *
      * @param privateKey the new value of the Private Key
@@ -159,6 +173,17 @@ public class CoralogixConfiguration extends GlobalConfiguration {
     }
 
     /**
+     * Coralogix API endpoint setter
+     *
+     * @param apiEndpoint the new value of the Coralogix API endpoint
+     */
+    @DataBoundSetter
+    public void setApiEndpoint(String apiEndpoint) {
+        this.apiEndpoint = apiEndpoint;
+        save();
+    }
+
+    /**
      * Coralogix Private Key validator
      *
      * @param privateKey Coralogix Private Key
@@ -180,6 +205,19 @@ public class CoralogixConfiguration extends GlobalConfiguration {
     public FormValidation doCheckJenkinsName(@QueryParameter String jenkinsName) {
         if (StringUtils.isEmpty(jenkinsName)) {
             return FormValidation.error("You must provide the Jenkins name");
+        }
+        return FormValidation.ok();
+    }
+
+    /**
+     * Coralogix API endpoint validator
+     *
+     * @param apiEndpoint Coralogix API endpoint
+     * @return Coralogix API endpoint validation status
+     */
+    public FormValidation doCheckApiEndpoint(@QueryParameter String apiEndpoint) {
+        if (!StringUtils.startsWithAny(apiEndpoint, new String[]{"https://", "http://"}) || !StringUtils.endsWith(apiEndpoint, "/")) {
+            return FormValidation.error("Incorrect Coralogix API endpoint");
         }
         return FormValidation.ok();
     }

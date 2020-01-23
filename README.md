@@ -21,6 +21,9 @@ for sending system/audit/security logs:
 
 ![Coralogix Configuration](docs/images/coralogix_global_configuration.png)
 
+Also, if you use different Coralogix endpoint, you can overwrite it
+as ``Coralogix API endpoint`` under the ``Advanced...`` section.
+
 ## Credentials
 
 Before usage you need to create ``Jenkins`` credentials with
