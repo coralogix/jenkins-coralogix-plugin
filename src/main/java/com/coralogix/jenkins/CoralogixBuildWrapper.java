@@ -133,29 +133,29 @@ public class CoralogixBuildWrapper extends BuildWrapper {
                     if (splitLogs) {
                         for (String logRecordText : logLines) {
                             logEntries.add(new Log(
-                                    1,
-                                    logRecordText,
-                                    "job",
-                                    "",
-                                    "",
-                                    build.getDisplayName()
-                            ));
-                        }
-                    } else {
-                        logEntries.add(new Log(
                                 1,
-                                String.join("\n", logLines),
+                                logRecordText,
                                 "job",
                                 "",
                                 "",
                                 build.getDisplayName()
+                            ));
+                        }
+                    } else {
+                        logEntries.add(new Log(
+                            1,
+                            String.join("\n", logLines),
+                            "job",
+                            "",
+                            "",
+                            build.getDisplayName()
                         ));
                     }
                     CoralogixAPI.sendLogs(
-                            CoralogixAPI.retrieveCoralogixCredential(build, privateKeyCredentialId),
-                            CoralogixAPI.replaceMacros(build, listener, application),
-                            CoralogixAPI.replaceMacros(build, listener, subsystem),
-                            logEntries
+                        CoralogixAPI.retrieveCoralogixCredential(build, privateKeyCredentialId),
+                        CoralogixAPI.replaceMacros(build, listener, application),
+                        CoralogixAPI.replaceMacros(build, listener, subsystem),
+                        logEntries
                     );
                 } catch (Exception e) {
                     listener.getLogger().println("Cannot send build logs to Coralogix!");

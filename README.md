@@ -72,6 +72,35 @@ pipeline {
 }
 ```
 
+### Send metrics
+
+Send your pipelines metrics to Coralogix.
+
+#### Pipeline
+
+This is the ``Groovy`` implementation:
+
+```groovy
+pipeline {
+    agent any
+    stages {
+        stage('Test') {
+            steps {
+                echo "Hello world!"
+            }
+        }
+    }
+    post {
+        always {
+            coralogixMetricsSend privateKeyCredentialId: 'coralogix-production',
+                                 application: 'MyApp',
+                                 subsystem: "${env.JOB_NAME}",
+                                 splitStages: false
+        }
+    }
+}
+```
+
 ### Push tag
 
 Push version tag to Coralogix.
@@ -88,7 +117,7 @@ Add build step ``Push Coralogix tag`` and configure:
 
 ![Coralogix Tag](docs/images/coralogix_push_tag.png)
 
-### Pipeline
+#### Pipeline
 
 This is the ``Groovy`` representation of ``Push Coralogix tag`` build step:
 
@@ -119,4 +148,4 @@ pipeline {
 
 ## License
 
-The Coralogix Plugin is licensed under the MIT License.
+The Coralogix Plugin is licensed under the Apache 2.0 License.

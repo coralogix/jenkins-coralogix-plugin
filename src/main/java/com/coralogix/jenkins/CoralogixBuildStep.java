@@ -142,13 +142,13 @@ public class CoralogixBuildStep extends Builder implements SimpleBuildStep {
     public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
         try {
             CoralogixAPI.pushTag(
-                    CoralogixAPI.retrieveCoralogixCredential(run, privateKeyCredentialId),
-                    CoralogixAPI.replaceMacros(run, listener, application),
-                    CoralogixAPI.replaceMacros(run, listener,
-                            subsystems.stream().map(Subsystem::getName).collect(Collectors.joining(","))
-                    ),
-                    CoralogixAPI.replaceMacros(run, listener, tag),
-                    icon
+                CoralogixAPI.retrieveCoralogixCredential(run, privateKeyCredentialId),
+                CoralogixAPI.replaceMacros(run, listener, application),
+                CoralogixAPI.replaceMacros(run, listener,
+                        subsystems.stream().map(Subsystem::getName).collect(Collectors.joining(","))
+                ),
+                CoralogixAPI.replaceMacros(run, listener, tag),
+                icon
             );
         } catch (Exception e) {
             listener.getLogger().println("Cannot push tag to Coralogix!");
