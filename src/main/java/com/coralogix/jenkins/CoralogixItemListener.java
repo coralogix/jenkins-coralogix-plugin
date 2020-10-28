@@ -87,18 +87,18 @@ public class CoralogixItemListener extends ItemListener {
             try {
                 List<Log> logEntries = new ArrayList<>();
                 logEntries.add(new Log(
-                        severity,
-                        message,
-                        "audit",
-                        "",
-                        "",
-                        ""
+                    severity,
+                    message,
+                    "audit",
+                    "",
+                    "",
+                    ""
                 ));
                 CoralogixAPI.sendLogs(
-                        CoralogixConfiguration.get().getPrivateKey(),
-                        CoralogixConfiguration.get().getJenkinsName(),
-                        "audit",
-                        logEntries
+                    CoralogixConfiguration.get().getPrivateKey(),
+                    CoralogixConfiguration.get().getJenkinsName(),
+                    "audit",
+                    logEntries
                 );
             } catch (Exception e) {
                 logger.log(Level.WARNING, "Cannot send build logs to Coralogix!");

@@ -3,12 +3,18 @@ package com.coralogix.jenkins.pipeline;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
+import com.cloudbees.workflow.rest.external.RunExt;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import hudson.Extension;
 import hudson.model.Item;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.security.ACL;
 import hudson.util.ListBoxModel;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
@@ -30,14 +36,13 @@ import com.coralogix.jenkins.utils.CoralogixAPI;
 import com.coralogix.jenkins.credentials.CoralogixCredential;
 
 /**
- * Pipeline counterpart of the CoralogixBuildWrapper.
- * Allows to send logs to Coralogix
+ * Allows to send metrics to Coralogix
  *
  * @author Eldar Aliiev
  * @version 1.0.0
- * @since 2019-10-21
+ * @since 2020-10-27
  */
-public class CoralogixSend extends Step {
+public class CoralogixMetricsSend extends Step {
 
     /**
      * Coralogix Private Key
@@ -55,9 +60,9 @@ public class CoralogixSend extends Step {
     private final String subsystem;
 
     /**
-     * Logs splitting
+     * Stages metrics splitting
      */
-    private final Boolean splitLogs;
+    private final Boolean splitStages;
 
     /**
      * Initialize pipeline step
@@ -65,11 +70,11 @@ public class CoralogixSend extends Step {
      * @param application application name
      */
     @DataBoundConstructor
-    public CoralogixSend(String privateKeyCredentialId, String application, String subsystem, Boolean splitLogs) {
+    public CoralogixMetricsSend(String privateKeyCredentialId, String application, String subsystem, Boolean splitStages) {
         this.privateKeyCredentialId = privateKeyCredentialId;
         this.application = application;
         this.subsystem = subsystem;
-        this.splitLogs = splitLogs;
+        this.splitStages = splitStages;
     }
 
     /**
@@ -100,12 +105,12 @@ public class CoralogixSend extends Step {
     }
 
     /**
-     * Logs splitting status getter
+     * Stages metrics splitting status getter
      *
-     * @return logs splitting status
+     * @return stages metrics splitting status
      */
-    public Boolean getSplitLogs() {
-        return this.splitLogs;
+    public Boolean getSplitStages() {
+        return this.splitStages;
     }
 
     /**
@@ -117,7 +122,7 @@ public class CoralogixSend extends Step {
      */
     @Override
     public StepExecution start(StepContext context) throws Exception {
-        return new Execution(context, this.privateKeyCredentialId, this.application, this.subsystem, this.splitLogs);
+        return new Execution(context, this.privateKeyCredentialId, this.application, this.subsystem, this.splitStages);
     }
 
     /**
@@ -147,9 +152,9 @@ public class CoralogixSend extends Step {
         private transient final String subsystem;
 
         /**
-         * Logs splitting
+         * Stages metrics splitting
          */
-        private transient final Boolean splitLogs;
+        private transient final Boolean splitStages;
 
         /**
          * Pipeline step executor initialization
@@ -157,12 +162,12 @@ public class CoralogixSend extends Step {
          * @param context     execution context
          * @param application application name
          */
-        Execution(StepContext context, String privateKeyCredentialId, String application, String subsystem, Boolean splitLogs) {
+        Execution(StepContext context, String privateKeyCredentialId, String application, String subsystem, Boolean splitStages) {
             super(context);
             this.privateKeyCredentialId = privateKeyCredentialId;
             this.application = application;
             this.subsystem = subsystem;
-            this.splitLogs = splitLogs;
+            this.splitStages = splitStages;
         }
 
         /**
@@ -173,16 +178,33 @@ public class CoralogixSend extends Step {
          */
         @Override
         protected Void run() throws Exception {
+            WorkflowRun run = getContext().get(WorkflowRun.class);
             Run<?, ?> build = getContext().get(Run.class);
             TaskListener listener = getContext().get(TaskListener.class);
+            GsonBuilder builder = new GsonBuilder();
+            JsonObject metrics = (JsonObject) builder.create().toJsonTree(RunExt.create(run));
+            JsonArray stages = metrics.getAsJsonArray("stages");
+
+            metrics.remove("_links");
+            metrics.addProperty("job", build.getParent().getFullName());
+
+            for(int i = 0; i < stages.size(); i++) {
+                JsonObject stage = stages.get(i).getAsJsonObject();
+                stage.remove("_links");
+                stage.remove("stageFlowNodes");
+                stages.set(i, stage);
+            }
+
             try {
                 List<Log> logEntries = new ArrayList<>();
-                List<String> logLines = build.getLog(Integer.MAX_VALUE);
-                if(splitLogs) {
-                    for(String logRecordText : logLines) {
+                if(splitStages) {
+                    for(JsonElement stage : stages) {
+                        JsonObject record = metrics.deepCopy();
+                        record.remove("stages");
+                        record.add("stage", stage);
                         logEntries.add(new Log(
                             1,
-                            logRecordText,
+                            record.toString(),
                             "job",
                             "",
                             "",
@@ -192,7 +214,7 @@ public class CoralogixSend extends Step {
                 } else {
                     logEntries.add(new Log(
                         1,
-                        String.join("\n", logLines),
+                        metrics.toString(),
                         "job",
                         "",
                         "",
@@ -206,7 +228,7 @@ public class CoralogixSend extends Step {
                     logEntries
                 );
             } catch (Exception e) {
-                listener.getLogger().println("Cannot send build logs to Coralogix!");
+                listener.getLogger().println("Cannot send pipeline metrics to Coralogix!");
             }
             return null;
         }
@@ -225,7 +247,7 @@ public class CoralogixSend extends Step {
          */
         @Override
         public String getDisplayName() {
-            return "Send logs to Coralogix";
+            return "Send metrics to Coralogix";
         }
 
         /**
@@ -235,7 +257,7 @@ public class CoralogixSend extends Step {
          */
         @Override
         public String getFunctionName() {
-            return "coralogixSend";
+            return "coralogixMetricsSend";
         }
 
         /**
@@ -246,6 +268,7 @@ public class CoralogixSend extends Step {
         @Override
         public Set<? extends Class<?>> getRequiredContext() {
             Set<Class<?>> contexts = new HashSet<>();
+            contexts.add(WorkflowRun.class);
             contexts.add(TaskListener.class);
             contexts.add(Run.class);
             return contexts;

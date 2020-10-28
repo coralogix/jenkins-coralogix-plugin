@@ -86,18 +86,18 @@ public class CoralogixSecurityListener extends SecurityListener {
             try {
                 List<Log> logEntries = new ArrayList<>();
                 logEntries.add(new Log(
-                        3,
-                        message,
-                        "security",
-                        "",
-                        "",
-                        ""
+                    3,
+                    message,
+                    "security",
+                    "",
+                    "",
+                    ""
                 ));
                 CoralogixAPI.sendLogs(
-                        CoralogixConfiguration.get().getPrivateKey(),
-                        CoralogixConfiguration.get().getJenkinsName(),
-                        "security",
-                        logEntries
+                    CoralogixConfiguration.get().getPrivateKey(),
+                    CoralogixConfiguration.get().getJenkinsName(),
+                    "security",
+                    logEntries
                 );
             } catch (Exception e) {
                 logger.log(Level.WARNING, "Cannot send build logs to Coralogix!");

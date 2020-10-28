@@ -203,11 +203,11 @@ public class CoralogixTag extends Step {
             TaskListener listener = getContext().get(TaskListener.class);
             try {
                 CoralogixAPI.pushTag(
-                        CoralogixAPI.retrieveCoralogixCredential(build, privateKeyCredentialId),
-                        application,
-                        subsystems.stream().map(Subsystem::getName).collect(Collectors.joining(",")),
-                        tag,
-                        icon
+                    CoralogixAPI.retrieveCoralogixCredential(build, privateKeyCredentialId),
+                    application,
+                    subsystems.stream().map(Subsystem::getName).collect(Collectors.joining(",")),
+                    tag,
+                    icon
                 );
             } catch (Exception e) {
                 listener.getLogger().println("Cannot push tag to Coralogix!");
