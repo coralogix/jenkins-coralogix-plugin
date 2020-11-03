@@ -11,6 +11,6 @@ run:
 	@mvn hpi:run
 
 clean:
-	@rm -rf .mvn target
+	@rm -rf target
 
 all: clean build

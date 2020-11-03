@@ -1,6 +1,6 @@
 # Jenkins Coralogix Plugin
 
-This plugin adds support for sending a job's console logs and 
+This plugin adds support for sending the job's console logs, metrics and
 push tags to [Coralogix](https://coralogix.com/).
 
 ## Installation
@@ -17,7 +17,7 @@ push tags to [Coralogix](https://coralogix.com/).
 
 Go to ``Manage Jenkins``, open ``Configure system``,
 find ``Coralogix`` section and configure your account private key
-for sending system/audit/security logs:
+for sending system/audit/security logs and metrics:
 
 ![Coralogix Configuration](docs/images/coralogix_global_configuration.png)
 
@@ -140,7 +140,7 @@ pipeline {
                             [name: 'staging'],
                             [name: 'production']
                          ],
-                         icon: ''
+                         icon: 'https://raw.githubusercontent.com/coralogix/jenkins-coralogix-plugin/master/docs/images/logo.svg'
         }
     }
 }

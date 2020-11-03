@@ -1,4 +1,4 @@
 <?jelly escape-by-default='true'?>
 <div>
-  Jenkins plugin to send logs to <a href="https://coralogix.com/">Coralogix</a>.
+  Jenkins plugin to send logs and metrics to <a href="https://coralogix.com/">Coralogix</a>.
 </div>
