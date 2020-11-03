@@ -14,7 +14,7 @@
     </f:entry>
     <f:advanced>
         <f:entry title="Icon URL" field="icon">
-            <f:textbox />
+            <f:textbox default="https://raw.githubusercontent.com/coralogix/jenkins-coralogix-plugin/master/docs/images/logo.svg" />
         </f:entry>
     </f:advanced>
 </j:jelly>

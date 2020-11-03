@@ -9,14 +9,14 @@
     </parent>
     <groupId>com.coralogix.jenkins</groupId>
     <artifactId>coralogix</artifactId>
-    <version>1.1.4</version>
+    <version>1.1.5</version>
     <packaging>hpi</packaging>
     <properties>
         <jenkins.version>2.249.2</jenkins.version>
         <java.level>8</java.level>
     </properties>
     <name>Coralogix</name>
-    <description>Jenkins plugin to send logs to Coralogix.</description>
+    <description>Jenkins plugin to send logs and metrics to Coralogix.</description>
     <url>https://wiki.jenkins.io/display/JENKINS/Coralogix+Plugin</url>
     <organization>
         <name>Coralogix, Inc.</name>
@@ -97,6 +97,12 @@
             <groupId>org.jenkins-ci.plugins.pipeline-stage-view</groupId>
             <artifactId>pipeline-rest-api</artifactId>
             <version>2.18</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>metrics</artifactId>
+            <version>4.0.2.6</version>
             <optional>true</optional>
         </dependency>
     </dependencies>
