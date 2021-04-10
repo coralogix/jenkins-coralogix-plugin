@@ -8,6 +8,7 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsUnavailableException;
 import com.cloudbees.plugins.credentials.matchers.IdMatcher;
 import com.coralogix.jenkins.credentials.CoralogixCredential;
+import com.coralogix.jenkins.credentials.CoralogixApiCredential;
 import com.coralogix.jenkins.exception.CoralogixPluginException;
 import com.google.gson.Gson;
 import hudson.Util;
@@ -25,6 +26,7 @@ import org.apache.http.entity.StringEntity;
 import com.coralogix.jenkins.CoralogixConfiguration;
 import com.coralogix.jenkins.model.Log;
 import com.coralogix.jenkins.model.Bulk;
+import com.coralogix.jenkins.model.Tag;
 
 /**
  * Coralogix API methods
@@ -38,24 +40,20 @@ public class CoralogixAPI {
     /**
      * Push tag request
      *
-     * @param privateKey  Coralogix Private Key
-     * @param application application name
-     * @param subsystems  subsystem name
-     * @param tag         tag name
-     * @param icon        tag icon
+     * @param apiKey        Coralogix API Key
+     * @param applications  applications names
+     * @param subsystems    subsystems names
+     * @param tag           tag name
+     * @param icon          tag icon
      * @throws Exception
      */
-    public static void pushTag(String privateKey, String application, String subsystems, String tag, String icon) throws Exception {
+    public static void pushTag(String apiKey, List<String> applications, List<String> subsystems, String tag, String icon) throws Exception {
         CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
-            HttpGet request = new HttpGet(String.format(
-                    CoralogixConfiguration.get().getApiEndpoint() + "api/v1/addTag?key=%s&application=%s&subsystem=%s&name=%s&iconUrl=%s",
-                    privateKey,
-                    application,
-                    subsystems,
-                    tag,
-                    icon
-            ));
+            HttpPost request = new HttpPost("https://webapi." + CoralogixConfiguration.get().getCoralogixEndpoint() + "/api/v1/external/tags");
+            request.addHeader("Content-Type", "application/json");
+            request.addHeader("Authorization", "Bearer " + apiKey);
+            request.setEntity(new StringEntity(buildTag(tag, applications, subsystems, icon)));
             httpclient.execute(request);
         } finally {
             httpclient.close();
@@ -73,8 +71,8 @@ public class CoralogixAPI {
     public static void sendLogs(String privateKey, String application, String subsystem, List<Log> logEntries) throws Exception {
         CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
-            HttpPost request = new HttpPost(CoralogixConfiguration.get().getApiEndpoint() + "api/v1/logs");
-            request.addHeader("content-type", "application/json");
+            HttpPost request = new HttpPost("https://api." + CoralogixConfiguration.get().getCoralogixEndpoint() + "/api/v1/logs");
+            request.addHeader("Content-Type", "application/json");
             request.setEntity(new StringEntity(buildData(privateKey, application, subsystem, logEntries)));
             httpclient.execute(request);
         } finally {
@@ -83,7 +81,7 @@ public class CoralogixAPI {
     }
 
     /**
-     * Build helper for request data
+     * Build helper for logs send request
      *
      * @param application application name
      * @param subsystem   subsystem name
@@ -93,13 +91,33 @@ public class CoralogixAPI {
     private static String buildData(String privateKey, String application, String subsystem, List<Log> logEntries) {
         Gson gson = new Gson();
         Bulk bulk = new Bulk(
-                privateKey,
-                application,
-                subsystem,
-                Util.getHostName(),
-                logEntries
+            privateKey,
+            application,
+            subsystem,
+            Util.getHostName(),
+            logEntries
         );
         return gson.toJson(bulk);
+    }
+
+    /**
+     * Build helper for tag request
+     *
+     * @param name          tag name
+     * @param applications  applications list
+     * @param subsystems    subsystems list
+     * @param icon          tag icon
+     * @return tag in JSON format
+     */
+    private static String buildTag(String name, List<String> applications, List<String> subsystems, String icon) {
+        Gson gson = new Gson();
+        Tag tag = new Tag(
+            name,
+            applications,
+            subsystems,
+            icon
+        );
+        return gson.toJson(tag);
     }
 
     /**
@@ -111,23 +129,51 @@ public class CoralogixAPI {
     public static String retrieveCoralogixCredential(Run build, String privateKeyCredentialId) {
         if (StringUtils.isBlank(privateKeyCredentialId)) {
             throw new CoralogixPluginException(
-                    "The credential id was not configured - please specify the credentials to use."
+                "The credential id was not configured - please specify the credentials to use."
             );
         }
         List<CoralogixCredential> credentials = CredentialsProvider.lookupCredentials(
-                CoralogixCredential.class,
-                build.getParent(),
-                ACL.SYSTEM,
-                Collections.emptyList()
+            CoralogixCredential.class,
+            build.getParent(),
+            ACL.SYSTEM,
+            Collections.emptyList()
         );
         CoralogixCredential credential = CredentialsMatchers.firstOrNull(
-                credentials,
-                new IdMatcher(privateKeyCredentialId)
+            credentials,
+            new IdMatcher(privateKeyCredentialId)
         );
         if (credential == null) {
             throw new CredentialsUnavailableException(privateKeyCredentialId);
         }
         return credential.getPrivateKey();
+    }
+
+    /**
+     * Coralogix API Key retriever
+     *
+     * @param build build context
+     * @return Coralogix API Key
+     */
+    public static String retrieveCoralogixApiCredential(Run build, String apiKeyCredentialId) {
+        if (StringUtils.isBlank(apiKeyCredentialId)) {
+            throw new CoralogixPluginException(
+                "The credential id was not configured - please specify the credentials to use."
+            );
+        }
+        List<CoralogixApiCredential> credentials = CredentialsProvider.lookupCredentials(
+            CoralogixApiCredential.class,
+            build.getParent(),
+            ACL.SYSTEM,
+            Collections.emptyList()
+        );
+        CoralogixApiCredential credential = CredentialsMatchers.firstOrNull(
+            credentials,
+            new IdMatcher(apiKeyCredentialId)
+        );
+        if (credential == null) {
+            throw new CredentialsUnavailableException(apiKeyCredentialId);
+        }
+        return credential.getApiKey();
     }
 
     /**

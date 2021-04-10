@@ -1,13 +1,13 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:c="/lib/credentials">
-    <f:entry title="Private Key" field="privateKeyCredentialId">
+    <f:entry title="API Key" field="apiKeyCredentialId">
         <c:select expressionAllowed="false"/>
     </f:entry>
     <f:entry title="Tag name" field="tag">
         <f:textbox />
     </f:entry>
-    <f:entry title="Application name" field="application">
-        <f:textbox />
+    <f:entry>
+        <f:repeatableProperty field="applications" minimum="1" header="Application" add="Add application" />
     </f:entry>
     <f:entry>
         <f:repeatableProperty field="subsystems" minimum="1" header="Subsystem" add="Add subsystem" />

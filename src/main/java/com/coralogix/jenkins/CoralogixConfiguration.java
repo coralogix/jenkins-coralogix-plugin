@@ -1,6 +1,7 @@
 package com.coralogix.jenkins;
 
 import hudson.Extension;
+import hudson.util.Secret;
 import hudson.util.FormValidation;
 import jenkins.model.GlobalConfiguration;
 import org.apache.commons.lang.StringUtils;
@@ -20,7 +21,7 @@ public class CoralogixConfiguration extends GlobalConfiguration {
     /**
      * Coralogix Private Key
      */
-    private String privateKey;
+    private Secret privateKey;
 
     /**
      * Jenkins name
@@ -53,9 +54,14 @@ public class CoralogixConfiguration extends GlobalConfiguration {
     private Integer metricsInterval = 5;
 
     /**
+     * Coralogix Region
+     */
+    private String region = "coralogix.com";
+
+    /**
      * Coralogix API endpoint
      */
-    private String apiEndpoint = "https://api.coralogix.com/";
+    private String apiEndpoint;
 
     /**
      * Global configuration getter
@@ -78,7 +84,7 @@ public class CoralogixConfiguration extends GlobalConfiguration {
      *
      * @return the currently configured private key
      */
-    public String getPrivateKey() {
+    public Secret getPrivateKey() {
         return this.privateKey;
     }
 
@@ -137,6 +143,15 @@ public class CoralogixConfiguration extends GlobalConfiguration {
     }
 
     /**
+     * Coralogix Region getter
+     *
+     * @return the currently configured Coralogix Region
+     */
+    public String getRegion() {
+        return this.region;
+    }
+
+    /**
      * Coralogix API endpoint getter
      *
      * @return the currently configured Coralogix API endpoint
@@ -146,12 +161,24 @@ public class CoralogixConfiguration extends GlobalConfiguration {
     }
 
     /**
+     * Coralogix endpoint builder
+     *
+     * @return Coralogix endpoint
+     */
+    public String getCoralogixEndpoint() {
+        if (this.region != "custom") {
+            return this.region;
+        }
+        return this.apiEndpoint;
+    }
+
+    /**
      * Coralogix Private Key setter
      *
      * @param privateKey the new value of the Private Key
      */
     @DataBoundSetter
-    public void setPrivateKey(String privateKey) {
+    public void setPrivateKey(Secret privateKey) {
         this.privateKey = privateKey;
         save();
     }
@@ -223,6 +250,17 @@ public class CoralogixConfiguration extends GlobalConfiguration {
     }
 
     /**
+     * Coralogix Region setter
+     *
+     * @param region the new value of the Coralogix Region
+     */
+    @DataBoundSetter
+    public void setRegion(String region) {
+        this.region = region;
+        save();
+    }
+
+    /**
      * Coralogix API endpoint setter
      *
      * @param apiEndpoint the new value of the Coralogix API endpoint
@@ -279,8 +317,8 @@ public class CoralogixConfiguration extends GlobalConfiguration {
      * @return Coralogix API endpoint validation status
      */
     public FormValidation doCheckApiEndpoint(@QueryParameter String apiEndpoint) {
-        if (!StringUtils.startsWithAny(apiEndpoint, new String[]{"https://", "http://"}) || !StringUtils.endsWith(apiEndpoint, "/")) {
-            return FormValidation.error("Incorrect Coralogix API endpoint");
+        if (StringUtils.startsWithAny(apiEndpoint, new String[]{"https://", "http://"}) || StringUtils.endsWith(apiEndpoint, "/")) {
+            return FormValidation.error("Incorrect Coralogix endpoint");
         }
         return FormValidation.ok();
     }
