@@ -26,12 +26,12 @@ public class Tag {
     /**
      * Applications list
      */
-    private List<String> applications;
+    private List<String> application;
 
     /**
      * Subsystems list
      */
-    private List<String> subsystems;
+    private List<String> subsystem;
 
     /**
      * Tag icon
@@ -48,8 +48,8 @@ public class Tag {
     public Tag(String name, List<String> applications, List<String> subsystems, String iconUrl) {
         this.timestamp = System.currentTimeMillis();
         this.name = name;
-        this.applications = applications;
-        this.subsystems = subsystems;
+        this.application = applications;
+        this.subsystem = subsystems;
         this.iconUrl = iconUrl;
     }
 }

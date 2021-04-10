@@ -40,19 +40,19 @@ public class CoralogixAPI {
     /**
      * Push tag request
      *
-     * @param privateKey    Coralogix Private Key
+     * @param apiKey        Coralogix API Key
      * @param applications  applications names
      * @param subsystems    subsystems names
      * @param tag           tag name
      * @param icon          tag icon
      * @throws Exception
      */
-    public static void pushTag(String privateKey, List<String> applications, List<String> subsystems, String tag, String icon) throws Exception {
+    public static void pushTag(String apiKey, List<String> applications, List<String> subsystems, String tag, String icon) throws Exception {
         CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
             HttpPost request = new HttpPost("https://webapi." + CoralogixConfiguration.get().getCoralogixEndpoint() + "/api/v1/external/tags");
             request.addHeader("Content-Type", "application/json");
-            request.addHeader("Authorization", "Bearer " + privateKey);
+            request.addHeader("Authorization", "Bearer " + apiKey);
             request.setEntity(new StringEntity(buildTag(tag, applications, subsystems, icon)));
             httpclient.execute(request);
         } finally {
