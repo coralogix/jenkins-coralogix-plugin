@@ -3,6 +3,7 @@ package com.coralogix.jenkins;
 import com.coralogix.jenkins.model.Log;
 import com.coralogix.jenkins.utils.CoralogixAPI;
 import hudson.Extension;
+import hudson.util.Secret;
 import hudson.model.PeriodicWork;
 import jenkins.metrics.api.Metrics;
 import com.codahale.metrics.json.MetricsModule;
@@ -69,7 +70,7 @@ public class CoralogixMetricsCollector extends PeriodicWork{
                     ""
                 ));
                 CoralogixAPI.sendLogs(
-                    CoralogixConfiguration.get().getPrivateKey(),
+                    Secret.toString(CoralogixConfiguration.get().getPrivateKey()),
                     CoralogixConfiguration.get().getJenkinsName(),
                     "metrics",
                     logEntries

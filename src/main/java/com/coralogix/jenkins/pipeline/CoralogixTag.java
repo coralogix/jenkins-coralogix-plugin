@@ -24,9 +24,10 @@ import java.util.Set;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.coralogix.jenkins.model.Application;
 import com.coralogix.jenkins.model.Subsystem;
 import com.coralogix.jenkins.utils.CoralogixAPI;
-import com.coralogix.jenkins.credentials.CoralogixCredential;
+import com.coralogix.jenkins.credentials.CoralogixApiCredential;
 
 /**
  * Pipeline counterpart of the CoralogixBuildWrapper.
@@ -39,9 +40,9 @@ import com.coralogix.jenkins.credentials.CoralogixCredential;
 public class CoralogixTag extends Step {
 
     /**
-     * Coralogix Private Key
+     * Coralogix API Key
      */
-    private final String privateKeyCredentialId;
+    private final String apiKeyCredentialId;
 
     /**
      * Tag name
@@ -49,14 +50,9 @@ public class CoralogixTag extends Step {
     private final String tag;
 
     /**
-     * Application name
+     * Applications list
      */
-    private final String application;
-
-    /**
-     * Tag icon
-     */
-    private final String icon;
+    private final List<Application> applications;
 
     /**
      * Subsystems list
@@ -64,29 +60,34 @@ public class CoralogixTag extends Step {
     private final List<Subsystem> subsystems;
 
     /**
+     * Tag icon
+     */
+    private final String icon;
+
+    /**
      * Initialize pipeline step
      *
      * @param tag         tag name
-     * @param application application name
+     * @param applications applications name
      * @param subsystems  subsystems name
      * @param icon        tag icon
      */
     @DataBoundConstructor
-    public CoralogixTag(String privateKeyCredentialId, String tag, String application, List<Subsystem> subsystems, String icon) {
-        this.privateKeyCredentialId = privateKeyCredentialId;
+    public CoralogixTag(String apiKeyCredentialId, String tag, List<Application> applications, List<Subsystem> subsystems, String icon) {
+        this.apiKeyCredentialId = apiKeyCredentialId;
         this.tag = tag;
-        this.application = application;
+        this.applications = applications;
         this.subsystems = subsystems;
         this.icon = icon;
     }
 
     /**
-     * Coralogix Private Key getter
+     * Coralogix API Key getter
      *
-     * @return the currently configured private key
+     * @return the currently configured API key
      */
-    public String getPrivateKeyCredentialId() {
-        return this.privateKeyCredentialId;
+    public String getApiKeyCredentialId() {
+        return this.apiKeyCredentialId;
     }
 
     /**
@@ -99,12 +100,12 @@ public class CoralogixTag extends Step {
     }
 
     /**
-     * Application name getter
+     * Applications list getter
      *
-     * @return application name
+     * @return applications list
      */
-    public String getApplication() {
-        return this.application;
+    public List<Application> getApplications() {
+        return this.applications;
     }
 
     /**
@@ -134,7 +135,7 @@ public class CoralogixTag extends Step {
      */
     @Override
     public StepExecution start(StepContext context) throws Exception {
-        return new Execution(context, this.privateKeyCredentialId, this.tag, this.application, this.subsystems, this.icon);
+        return new Execution(context, this.apiKeyCredentialId, this.tag, this.applications, this.subsystems, this.icon);
     }
 
     /**
@@ -149,9 +150,9 @@ public class CoralogixTag extends Step {
         private static final long serialVersionUID = 1L;
 
         /**
-         * Coralogix Private Key
+         * Coralogix API Key
          */
-        private transient final String privateKeyCredentialId;
+        private transient final String apiKeyCredentialId;
 
         /**
          * Tag name
@@ -159,14 +160,9 @@ public class CoralogixTag extends Step {
         private transient final String tag;
 
         /**
-         * Application name
+         * Applications list
          */
-        private transient final String application;
-
-        /**
-         * Tag icon
-         */
-        private transient final String icon;
+        private transient final List<Application> applications;
 
         /**
          * Subsystems list
@@ -174,19 +170,24 @@ public class CoralogixTag extends Step {
         private transient final List<Subsystem> subsystems;
 
         /**
+         * Tag icon
+         */
+        private transient final String icon;
+
+        /**
          * Pipeline step executor initialization
          *
          * @param context     execution context
          * @param tag         tag name
-         * @param application application name
-         * @param subsystems  subsystems name
+         * @param applications applications names
+         * @param subsystems  subsystems names
          * @param icon        tag icon
          */
-        Execution(StepContext context, String privateKeyCredentialId, String tag, String application, List<Subsystem> subsystems, String icon) {
+        Execution(StepContext context, String apiKeyCredentialId, String tag, List<Application> applications, List<Subsystem> subsystems, String icon) {
             super(context);
-            this.privateKeyCredentialId = privateKeyCredentialId;
+            this.apiKeyCredentialId = apiKeyCredentialId;
             this.tag = tag;
-            this.application = application;
+            this.applications = applications;
             this.subsystems = subsystems;
             this.icon = icon;
         }
@@ -203,9 +204,9 @@ public class CoralogixTag extends Step {
             TaskListener listener = getContext().get(TaskListener.class);
             try {
                 CoralogixAPI.pushTag(
-                    CoralogixAPI.retrieveCoralogixCredential(build, privateKeyCredentialId),
-                    application,
-                    subsystems.stream().map(Subsystem::getName).collect(Collectors.joining(",")),
+                    CoralogixAPI.retrieveCoralogixApiCredential(build, apiKeyCredentialId),
+                    applications.stream().map(Application::getName).collect(Collectors.toList()),
+                    subsystems.stream().map(Subsystem::getName).collect(Collectors.toList()),
                     tag,
                     icon
                 );
@@ -257,17 +258,17 @@ public class CoralogixTag extends Step {
         }
 
         /**
-         * Coralogix Private Keys list builder
+         * Coralogix API Keys list builder
          *
          * @param owner Credentials owner
          * @param uri   Current URL
          * @return allowed credentials list
          */
         @SuppressWarnings("unused")
-        public ListBoxModel doFillPrivateKeyCredentialIdItems(@AncestorInPath Item owner,
+        public ListBoxModel doFillApiKeyCredentialIdItems(@AncestorInPath Item owner,
                                                               @QueryParameter String uri) {
             List<DomainRequirement> domainRequirements = URIRequirementBuilder.fromUri(uri).build();
-            return new StandardListBoxModel().includeEmptyValue().includeAs(ACL.SYSTEM, owner, CoralogixCredential.class, domainRequirements);
+            return new StandardListBoxModel().includeEmptyValue().includeAs(ACL.SYSTEM, owner, CoralogixApiCredential.class, domainRequirements);
         }
     }
 }

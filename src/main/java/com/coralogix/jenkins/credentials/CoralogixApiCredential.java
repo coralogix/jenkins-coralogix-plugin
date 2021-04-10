@@ -9,36 +9,36 @@ import hudson.util.Secret;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
- * Coralogix Logs credentials definition
+ * Coralogix API credentials definition
  *
  * @author Eldar Aliiev
- * @version 1.1.0
- * @since 2019-11-11
+ * @version 1.0.0
+ * @since 2021-04-10
  */
-public class CoralogixCredential extends BaseStandardCredentials {
+public class CoralogixApiCredential extends BaseStandardCredentials {
 
     /**
-     * Coralogix Private Key
+     * Coralogix API Key
      */
-    private Secret privateKey;
+    private Secret apiKey;
 
     /**
-     * Coralogix Private Key credential constructor
+     * Coralogix API Key credential constructor
      */
     @DataBoundConstructor
-    public CoralogixCredential(@CheckForNull CredentialsScope scope, @CheckForNull String id,
-                               @CheckForNull String description, @NonNull Secret privateKey) {
+    public CoralogixApiCredential(@CheckForNull CredentialsScope scope, @CheckForNull String id,
+                               @CheckForNull String description, @NonNull Secret apiKey) {
         super(scope, id, description);
-        this.privateKey = privateKey;
+        this.apiKey = apiKey;
     }
 
     /**
-     * Coralogix Private Key getter
+     * Coralogix API Key getter
      *
-     * @return the currently configured private key
+     * @return the currently configured API key
      */
-    public String getPrivateKey() {
-        return Secret.toString(this.privateKey);
+    public String getApiKey() {
+        return Secret.toString(this.apiKey);
     }
 
     /**
@@ -55,7 +55,7 @@ public class CoralogixCredential extends BaseStandardCredentials {
         @NonNull
         @Override
         public String getDisplayName() {
-            return "Coralogix Private Key";
+            return "Coralogix API Key";
         }
     }
 }

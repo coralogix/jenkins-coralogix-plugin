@@ -3,6 +3,7 @@ package com.coralogix.jenkins;
 import com.coralogix.jenkins.model.Log;
 import com.coralogix.jenkins.utils.CoralogixAPI;
 import hudson.Extension;
+import hudson.util.Secret;
 import hudson.model.Item;
 import hudson.model.listeners.ItemListener;
 
@@ -95,7 +96,7 @@ public class CoralogixItemListener extends ItemListener {
                     ""
                 ));
                 CoralogixAPI.sendLogs(
-                    CoralogixConfiguration.get().getPrivateKey(),
+                    Secret.toString(CoralogixConfiguration.get().getPrivateKey()),
                     CoralogixConfiguration.get().getJenkinsName(),
                     "audit",
                     logEntries

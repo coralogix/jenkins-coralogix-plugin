@@ -27,9 +27,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.coralogix.jenkins.model.Application;
 import com.coralogix.jenkins.model.Subsystem;
 import com.coralogix.jenkins.utils.CoralogixAPI;
-import com.coralogix.jenkins.credentials.CoralogixCredential;
+import com.coralogix.jenkins.credentials.CoralogixApiCredential;
 
 /**
  * Jenkins build step definition
@@ -42,9 +43,9 @@ import com.coralogix.jenkins.credentials.CoralogixCredential;
 public class CoralogixBuildStep extends Builder implements SimpleBuildStep {
 
     /**
-     * Coralogix Private Key
+     * Coralogix API Key
      */
-    private final String privateKeyCredentialId;
+    private final String apiKeyCredentialId;
 
     /**
      * Tag name
@@ -54,12 +55,7 @@ public class CoralogixBuildStep extends Builder implements SimpleBuildStep {
     /**
      * Application name
      */
-    private final String application;
-
-    /**
-     * Tag icon
-     */
-    private final String icon;
+    private final List<Application> applications;
 
     /**
      * Subsystems list
@@ -67,29 +63,34 @@ public class CoralogixBuildStep extends Builder implements SimpleBuildStep {
     private final List<Subsystem> subsystems;
 
     /**
+     * Tag icon
+     */
+    private final String icon;
+
+    /**
      * Initialize build step
      *
      * @param tag         tag name
-     * @param application application name
-     * @param subsystems  subsystems name
+     * @param applications applications names
+     * @param subsystems  subsystems names
      * @param icon        tag icon
      */
     @DataBoundConstructor
-    public CoralogixBuildStep(String privateKeyCredentialId, String tag, String application, List<Subsystem> subsystems, String icon) {
-        this.privateKeyCredentialId = privateKeyCredentialId;
+    public CoralogixBuildStep(String apiKeyCredentialId, String tag, List<Application> applications, List<Subsystem> subsystems, String icon) {
+        this.apiKeyCredentialId = apiKeyCredentialId;
         this.tag = tag;
-        this.application = application;
+        this.applications = applications;
         this.subsystems = subsystems;
         this.icon = icon;
     }
 
     /**
-     * Coralogix Private Key getter
+     * Coralogix API Key getter
      *
-     * @return the currently configured private key
+     * @return the currently configured API key
      */
-    public String getPrivateKeyCredentialId() {
-        return this.privateKeyCredentialId;
+    public String getApiKeyCredentialId() {
+        return this.apiKeyCredentialId;
     }
 
     /**
@@ -102,12 +103,12 @@ public class CoralogixBuildStep extends Builder implements SimpleBuildStep {
     }
 
     /**
-     * Application name getter
+     * Applications list getter
      *
-     * @return application name
+     * @return applications list
      */
-    public String getApplication() {
-        return this.application;
+    public List<Application> getApplications() {
+        return this.applications;
     }
 
     /**
@@ -142,11 +143,9 @@ public class CoralogixBuildStep extends Builder implements SimpleBuildStep {
     public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
         try {
             CoralogixAPI.pushTag(
-                CoralogixAPI.retrieveCoralogixCredential(run, privateKeyCredentialId),
-                CoralogixAPI.replaceMacros(run, listener, application),
-                CoralogixAPI.replaceMacros(run, listener,
-                        subsystems.stream().map(Subsystem::getName).collect(Collectors.joining(","))
-                ),
+                CoralogixAPI.retrieveCoralogixApiCredential(run, apiKeyCredentialId),
+                applications.stream().map(application -> CoralogixAPI.replaceMacros(run, listener, application.getName())).collect(Collectors.toList()),
+                subsystems.stream().map(subsystem -> CoralogixAPI.replaceMacros(run, listener, subsystem.getName())).collect(Collectors.toList()),
                 CoralogixAPI.replaceMacros(run, listener, tag),
                 icon
             );
@@ -163,14 +162,14 @@ public class CoralogixBuildStep extends Builder implements SimpleBuildStep {
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
         /**
-         * Coralogix Private Key validator
+         * Coralogix API Key validator
          *
-         * @param privateKeyCredentialId Coralogix Private Key
-         * @return Private Key validation status
+         * @param apiKeyCredentialId Coralogix API Key
+         * @return API Key validation status
          */
-        public FormValidation doCheckPrivateKeyCredentialId(@QueryParameter String privateKeyCredentialId) {
-            if (StringUtils.isEmpty(privateKeyCredentialId)) {
-                return FormValidation.error("You must provide the private key");
+        public FormValidation doCheckApiKeyCredentialId(@QueryParameter String apiKeyCredentialId) {
+            if (StringUtils.isEmpty(apiKeyCredentialId)) {
+                return FormValidation.error("You must provide the API key");
             }
             return FormValidation.ok();
         }
@@ -191,32 +190,17 @@ public class CoralogixBuildStep extends Builder implements SimpleBuildStep {
         }
 
         /**
-         * Application name validator
-         *
-         * @param application application name
-         * @return application name validation status
-         * @throws IOException
-         * @throws ServletException
-         */
-        public FormValidation doCheckApplication(@QueryParameter String application) throws IOException, ServletException {
-            if (application.length() == 0) {
-                return FormValidation.error("Application name is missed!");
-            }
-            return FormValidation.ok();
-        }
-
-        /**
-         * Coralogix Private Keys list builder
+         * Coralogix API Keys list builder
          *
          * @param owner Credentials owner
          * @param uri   Current URL
          * @return allowed credentials list
          */
         @SuppressWarnings("unused")
-        public ListBoxModel doFillPrivateKeyCredentialIdItems(@AncestorInPath Item owner,
-                                                              @QueryParameter String uri) {
+        public ListBoxModel doFillApiKeyCredentialIdItems(@AncestorInPath Item owner,
+                                                          @QueryParameter String uri) {
             List<DomainRequirement> domainRequirements = URIRequirementBuilder.fromUri(uri).build();
-            return new StandardListBoxModel().includeEmptyValue().includeAs(ACL.SYSTEM, owner, CoralogixCredential.class, domainRequirements);
+            return new StandardListBoxModel().includeEmptyValue().includeAs(ACL.SYSTEM, owner, CoralogixApiCredential.class, domainRequirements);
         }
 
         /**

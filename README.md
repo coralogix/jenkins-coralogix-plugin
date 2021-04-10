@@ -21,15 +21,21 @@ for sending system/audit/security logs and metrics:
 
 ![Coralogix Configuration](docs/images/coralogix_global_configuration.png)
 
-Also, if you use different Coralogix endpoint, you can overwrite it
-as ``Coralogix API endpoint`` under the ``Advanced...`` section.
+Also, if you use different Coralogix Region, you can change it
+as ``Coralogix Region`` under the ``Advanced...`` section.
+
+Or if you use Private Link you can change ``Coralogix Region`` to *Custom* and overwrite it in ``Custom Coralogix endpoint`` field.
 
 ## Credentials
 
 Before usage you need to create ``Jenkins`` credentials with
-``Coralogix`` private key for your team:
+``Coralogix`` **Private Key** for your team:
 
 ![Coralogix Configuration](docs/images/coralogix_credentials.png)
+
+and **API Key** to push tags:
+
+![Coralogix Configuration](docs/images/coralogix_api_credentials.png)
 
 ## Usage
 
@@ -109,9 +115,9 @@ Push version tag to Coralogix.
 
 Add build step ``Push Coralogix tag`` and configure:
 
-* **Private Key** - your Coralogix account private key
+* **API Key** - your Coralogix account API key
 * **Tag name** - version tag name
-* **Application name** - your application name
+* **Application names** - your application names
 * **Subsystem names** - your subsystem names
 * **Icon**(optional) - your own tag picture
 
@@ -133,9 +139,11 @@ pipeline {
     }
     post {
         success {
-            coralogixTag privateKeyCredentialId: 'coralogix-production',
+            coralogixTag apiKeyCredentialId: 'coralogix-production-api',
                          tag: '1.0.0',
-                         application: 'MyApp',
+                         applications: [
+                            [name: 'MyApp']
+                         ],
                          subsystems: [
                             [name: 'staging'],
                             [name: 'production']

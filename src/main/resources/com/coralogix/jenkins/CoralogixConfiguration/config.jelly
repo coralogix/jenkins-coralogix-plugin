@@ -20,7 +20,15 @@
             <f:checkbox />
         </f:entry>
         <f:advanced>
-            <f:entry title="Coralogix API endpoint" field="apiEndpoint" description="Overwrite Coralogix API endpoint">
+            <f:entry title="Coralogix Region" name="region" field="region">
+                <select name="region">
+                    <option value="coralogix.com" selected="${instance.region.equals('coralogix.com') ? 'true' : null}">Europe (coralogix.com)</option>
+                    <option value="app.coralogix.in" selected="${instance.region.equals('app.coralogix.in') ? 'true' : null}">India (app.coralogix.in)</option>
+                    <option value="coralogix.us" selected="${instance.region.equals('coralogix.us') ? 'true' : null}">United States (coralogix.us)</option>
+                    <option value="custom" selected="${instance.region.equals('custom') ? 'true' : null}">Custom...</option>
+                </select>
+            </f:entry>
+            <f:entry title="Custom Coralogix endpoint" field="apiEndpoint" description="Custom Coralogix endpoint">
                 <f:textbox />
             </f:entry>
             <f:entry title="Metrics interval" field="metricsInterval" description="Overwrite Jenkins metrics collecting interval">

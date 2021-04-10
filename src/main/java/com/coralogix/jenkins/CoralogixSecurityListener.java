@@ -1,6 +1,7 @@
 package com.coralogix.jenkins;
 
 import hudson.Extension;
+import hudson.util.Secret;
 import jenkins.security.SecurityListener;
 import org.acegisecurity.userdetails.UserDetails;
 
@@ -94,7 +95,7 @@ public class CoralogixSecurityListener extends SecurityListener {
                     ""
                 ));
                 CoralogixAPI.sendLogs(
-                    CoralogixConfiguration.get().getPrivateKey(),
+                    Secret.toString(CoralogixConfiguration.get().getPrivateKey()),
                     CoralogixConfiguration.get().getJenkinsName(),
                     "security",
                     logEntries
