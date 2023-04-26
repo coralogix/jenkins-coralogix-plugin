@@ -25,6 +25,8 @@
                     <option value="coralogix.com" selected="${instance.region.equals('coralogix.com') ? 'true' : null}">Europe (coralogix.com)</option>
                     <option value="coralogix.in" selected="${instance.region.equals('coralogix.in') ? 'true' : null}">India (coralogix.in)</option>
                     <option value="coralogix.us" selected="${instance.region.equals('coralogix.us') ? 'true' : null}">United States (coralogix.us)</option>
+                    <option value="eu2.coralogix.com" selected="${instance.region.equals('eu2.coralogix.com') ? 'true' : null}">Sweden(EU) (eu2.coralogix.com)</option>
+                    <option value="coralogixsg.com" selected="${instance.region.equals('coralogixsg.com') ? 'true' : null}">Singapore (coralogixsg.com)</option>
                     <option value="custom" selected="${instance.region.equals('custom') ? 'true' : null}">Custom...</option>
                 </select>
             </f:entry>
