@@ -71,7 +71,7 @@ public class CoralogixAPI {
     public static void sendLogs(String privateKey, String application, String subsystem, List<Log> logEntries) throws Exception {
         CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
-            HttpPost request = new HttpPost("https://api." + CoralogixConfiguration.get().getCoralogixEndpoint() + "/api/v1/logs");
+            HttpPost request = new HttpPost("https://ingress." + CoralogixConfiguration.get().getCoralogixEndpoint() + "/api/v1/logs");
             request.addHeader("Content-Type", "application/json");
             request.setEntity(new StringEntity(buildData(privateKey, application, subsystem, logEntries)));
             httpclient.execute(request);
