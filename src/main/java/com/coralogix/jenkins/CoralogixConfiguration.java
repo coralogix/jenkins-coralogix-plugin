@@ -44,16 +44,6 @@ public class CoralogixConfiguration extends GlobalConfiguration {
     private Boolean securityLogsEnabled = false;
 
     /**
-     * Metrics sending status
-     */
-    private Boolean metricsEnabled = false;
-
-    /**
-     * Metrics sending interval
-     */
-    private Integer metricsInterval = 5;
-
-    /**
      * Coralogix Region
      */
     private String region = "coralogix.com";
@@ -122,24 +112,6 @@ public class CoralogixConfiguration extends GlobalConfiguration {
      */
     public Boolean getSecurityLogsEnabled() {
         return this.securityLogsEnabled;
-    }
-
-    /**
-     * Jenkins metrics status getter
-     *
-     * @return metrics sending status
-     */
-    public Boolean getMetricsEnabled() {
-        return this.metricsEnabled;
-    }
-
-    /**
-     * Jenkins metrics interval getter
-     *
-     * @return metrics sending interval
-     */
-    public Integer getMetricsInterval() {
-        return this.metricsInterval;
     }
 
     /**
@@ -228,28 +200,6 @@ public class CoralogixConfiguration extends GlobalConfiguration {
     }
 
     /**
-     * Jenkins metrics status setter
-     *
-     * @param metricsEnabled the new status for metrics sending
-     */
-    @DataBoundSetter
-    public void setMetricsEnabled(Boolean metricsEnabled) {
-        this.metricsEnabled = metricsEnabled;
-        save();
-    }
-
-    /**
-     * Jenkins metrics interval setter
-     *
-     * @param metricsInterval the new interval for metrics sending
-     */
-    @DataBoundSetter
-    public void setMetricsInterval(Integer metricsInterval) {
-        this.metricsInterval = metricsInterval;
-        save();
-    }
-
-    /**
      * Coralogix Region setter
      *
      * @param region the new value of the Coralogix Region
@@ -293,19 +243,6 @@ public class CoralogixConfiguration extends GlobalConfiguration {
     public FormValidation doCheckJenkinsName(@QueryParameter String jenkinsName) {
         if (StringUtils.isEmpty(jenkinsName)) {
             return FormValidation.error("You must provide the Jenkins name");
-        }
-        return FormValidation.ok();
-    }
-
-    /**
-     * Coralogix metrics interval validator
-     *
-     * @param metricsInterval Jenkins metrics interval
-     * @return Jenkins metrics interval validation status
-     */
-    public FormValidation doCheckMetricsInterval(@QueryParameter Integer metricsInterval) {
-        if (metricsInterval < 5) {
-            return FormValidation.error("Metrics collector interval should be greater or equals to 5 seconds");
         }
         return FormValidation.ok();
     }

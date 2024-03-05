@@ -1,6 +1,6 @@
 # Jenkins Coralogix Plugin
 
-This plugin adds support for sending the job's console logs, metrics and
+This plugin adds support for sending Audit, Security, Pipeline console logs, and
 push tags to [Coralogix](https://coralogix.com/).
 
 ## Installation
@@ -17,7 +17,7 @@ push tags to [Coralogix](https://coralogix.com/).
 
 Go to ``Manage Jenkins``, open ``Configure system``,
 find ``Coralogix`` section and configure your account private key
-for sending system/audit/security logs and metrics:
+for sending system/audit/security logs:
 
 ![Coralogix Configuration](docs/images/coralogix_global_configuration.png)
 
@@ -78,35 +78,6 @@ pipeline {
 }
 ```
 
-### Send metrics
-
-Send your pipelines metrics to Coralogix.
-
-#### Pipeline
-
-This is the ``Groovy`` implementation:
-
-```groovy
-pipeline {
-    agent any
-    stages {
-        stage('Test') {
-            steps {
-                echo "Hello world!"
-            }
-        }
-    }
-    post {
-        always {
-            coralogixMetricsSend privateKeyCredentialId: 'coralogix-production',
-                                 application: 'MyApp',
-                                 subsystem: "${env.JOB_NAME}",
-                                 splitStages: false
-        }
-    }
-}
-```
-
 ### Push tag
 
 Push version tag to Coralogix.
@@ -153,6 +124,17 @@ pipeline {
     }
 }
 ```
+
+
+## Upgrading
+
+If upgrading from version <= 1.17, you will get an error in the Manage Jenkins UI:
+
+![Jenkins Error](docs/images/jenkins_upgrade_error.png)
+
+To clear this error, simply click "Manage" and then "Discard Unreadable Data" of the CoralogixConfiguration:
+
+![Jenkins Error](docs/images/jenkins_discard_unreadable.png)
 
 ## License
 
