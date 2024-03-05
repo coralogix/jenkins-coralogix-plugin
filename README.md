@@ -1,6 +1,6 @@
 # Jenkins Coralogix Plugin
 
-This plugin adds support for sending the job's console logs and
+This plugin adds support for sending Audit, Security, Pipeline console logs, and
 push tags to [Coralogix](https://coralogix.com/).
 
 ## Installation
@@ -124,6 +124,17 @@ pipeline {
     }
 }
 ```
+
+
+## Upgrading
+
+If upgrading from version <= 1.17, you will get an error in the Manage Jenkins UI:
+
+![Jenkins Error](docs/images/jenkins_upgrade_error.png)
+
+To clear this error, simply click "Manage" and then "Discard Unreadable Data" of the CoralogixConfiguration:
+
+![Jenkins Error](docs/images/jenkins_discard_unreadable.png)
 
 ## License
 
