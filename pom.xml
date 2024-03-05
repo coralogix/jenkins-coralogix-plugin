@@ -4,16 +4,15 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>4.10</version>
+        <version>4.78</version>
         <relativePath />
     </parent>
     <groupId>com.coralogix.jenkins</groupId>
     <artifactId>coralogix</artifactId>
-    <version>1.1.7</version>
+    <version>1.1.8</version>
     <packaging>hpi</packaging>
     <properties>
-        <jenkins.version>2.277.2</jenkins.version>
-        <java.level>8</java.level>
+        <jenkins.version>2.426.3</jenkins.version>
     </properties>
     <name>Coralogix</name>
     <description>Jenkins plugin to send logs and metrics to Coralogix.</description>
