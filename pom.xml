@@ -15,7 +15,7 @@
         <jenkins.version>2.426.3</jenkins.version>
     </properties>
     <name>Coralogix</name>
-    <description>Jenkins plugin to send logs and metrics to Coralogix.</description>
+    <description>Jenkins plugin to send logs Coralogix.</description>
     <url>https://wiki.jenkins.io/display/JENKINS/Coralogix+Plugin</url>
     <organization>
         <name>Coralogix, Inc.</name>
@@ -96,12 +96,6 @@
             <groupId>org.jenkins-ci.plugins.pipeline-stage-view</groupId>
             <artifactId>pipeline-rest-api</artifactId>
             <version>2.18</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.jenkins-ci.plugins</groupId>
-            <artifactId>metrics</artifactId>
-            <version>4.0.2.6</version>
             <optional>true</optional>
         </dependency>
     </dependencies>

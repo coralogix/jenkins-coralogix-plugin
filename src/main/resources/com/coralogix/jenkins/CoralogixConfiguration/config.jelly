@@ -16,9 +16,6 @@
         <f:entry title="Send security logs" field="securityLogsEnabled" description="Check to enable the sending of Jenkins security logs to Coralogix">
             <f:checkbox />
         </f:entry>
-        <f:entry title="Send metrics" field="metricsEnabled" description="Check to enable the sending of Jenkins metrics to Coralogix">
-            <f:checkbox />
-        </f:entry>
         <f:advanced>
             <f:entry title="Coralogix Region" name="region" field="region">
                 <select name="region">
@@ -33,9 +30,6 @@
             </f:entry>
             <f:entry title="Custom Coralogix endpoint" field="apiEndpoint" description="Custom Coralogix endpoint">
                 <f:textbox />
-            </f:entry>
-            <f:entry title="Metrics interval" field="metricsInterval" description="Overwrite Jenkins metrics collecting interval">
-                <f:number min="5" max="86400" />
             </f:entry>
         </f:advanced>
     </f:section>
